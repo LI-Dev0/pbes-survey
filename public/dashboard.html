@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Analytics Dashboard</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { 
+        font-family: Arial, sans-serif; 
+        background: linear-gradient(135deg, #eafaf0 0%, #59c36f 100%);
+        margin: 0;
+        padding: 16px;
+        min-height: 100vh;
+      }
+      .container { max-width: 1200px; margin: 0 auto; }
+      .card { 
+        background: rgba(255, 255, 255, 0.98); 
+        padding: 20px; 
+        border-radius: 14px; 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+      }
+      h1 { margin: 0 0 8px 0; color: #065f46; }
+      .small { font-size: 0.9rem; color: #666; margin: 4px 0; }
+      
+      .filters-section { 
+        background: #f9fafb;
+        padding: 16px;
+        border-radius: 10px;
+        margin-bottom: 16px;
+      }
+      .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-bottom: 12px;
+      }
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+      }
+      label { 
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 6px;
+        font-size: 0.9rem;
+      }
+      select, input { 
+        padding: 8px 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-family: Arial, sans-serif;
+      }
+      select:focus, input:focus {
+        outline: none;
+        border-color: #16a34a;
+        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+      }
+      select[multiple] {
+        min-height: 80px;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+      button {
+        padding: 10px 16px;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      #applyFiltersBtn {
+        background: #16a34a;
+        color: white;
+      }
+      #applyFiltersBtn:hover {
+        background: #15803d;
+      }
+      #clearFiltersBtn {
+        background: #e5e7eb;
+        color: #374151;
+      }
+      #clearFiltersBtn:hover {
+        background: #d1d5db;
+      }
+      #refreshBtn, #exportBtn {
+        background: #059669;
+        color: white;
+      }
+      #refreshBtn:hover, #exportBtn:hover {
+        background: #047857;
+      }
+
+      .main-content {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 20px;
+        align-items: start;
+      }
+      #chartContainer { 
+        background: rgba(255, 255, 255, 0.98);
+        padding: 16px;
+        border-radius: 10px;
+        max-height: 500px;
+      }
+      #recent { 
+        background: rgba(255, 255, 255, 0.98);
+        padding: 16px;
+        border-radius: 10px;
+        max-height: 600px;
+        overflow-y: auto;
+      }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #f0f0f0; }
+      th { font-weight: 600; color: #065f46; font-size: 0.85rem; }
+      td { font-size: 0.85rem; }
+      tr:hover { background: #f9fafb; }
+
+      .controls-top {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      .controls-top label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0;
+        font-weight: normal;
+      }
+      input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+      }
+
+      @media (max-width: 900px) {
+        .main-content {
+          grid-template-columns: 1fr;
+        }
+        #recent {
+          max-height: none;
+        }
+        .filter-row {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .active-filters {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+        font-size: 0.85rem;
+      }
+      .filter-tag {
+        background: #d1fae5;
+        color: #065f46;
+        padding: 4px 10px;
+        border-radius: 4px;
+        border: 1px solid #6ee7b7;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <section class="card">
+        <h1>Biogas Survey Analytics Dashboard</h1>
+        <p class="small">Filter and analyze survey responses by multiple dimensions. Charts update in real-time.</p>
+      </section>
+
+      <section class="card">
+        <h2 style="margin-top: 0; margin-bottom: 16px; color: #065f46;">Filters & Analysis</h2>
+        
+        <div class="filters-section">
+          <div class="filter-row">
+            <div class="filter-group">
+              <label for="analyzeBySelect">Analyze By</label>
+              <select id="analyzeBySelect">
+                <option value="category">Category</option>
+                <option value="currentFuel">Current Fuel Type</option>
+                <option value="interest">Interest Level</option>
+                <option value="budget">Budget Category</option>
+                <option value="monthlySpendBucket">Monthly Spend Range</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="reportingCurrency">Reporting Currency</label>
+              <select id="reportingCurrency">
+                <option value="USD">USD - US Dollar</option>
+                <option value="NGN">NGN - Nigerian Naira</option>
+                <option value="KES">KES - Kenyan Shilling</option>
+                <option value="GHS">GHS - Ghanaian Cedi</option>
+                <option value="UGX">UGX - Ugandan Shilling</option>
+                <option value="ZAR">ZAR - South African Rand</option>
+                <option value="TZS">TZS - Tanzanian Shilling</option>
+                <option value="RWF">RWF - Rwandan Franc</option>
+                <option value="ETB">ETB - Ethiopian Birr</option>
+                <option value="XOF">XOF - West African CFA Franc</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="currentFuelFilter">Filter by Fuel Type</label>
+              <select id="currentFuelFilter" multiple>
+                <option value="lpg">LPG</option>
+                <option value="electricity">Electricity</option>
+                <option value="firewood">Firewood</option>
+                <option value="charcoal">Charcoal</option>
+                <option value="kerosene">Kerosene</option>
+                <option value="biomass">Biomass</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="interestFilter">Filter by Interest Level</label>
+              <select id="interestFilter" multiple>
+                <option value="very">Very Interested</option>
+                <option value="somewhat">Somewhat Interested</option>
+                <option value="not">Not Interested</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="budgetFilter">Filter by Budget</label>
+              <select id="budgetFilter" multiple>
+                <option value="lt100">Less than 100</option>
+                <option value="100-499">100–499</option>
+                <option value="500-999">500–999</option>
+                <option value="1000+">1000+</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="filter-row">
+            <div class="filter-group">
+              <label for="minSpend">Min Monthly Spend (<span id="minSpendCurrency">USD</span>)</label>
+              <input type="number" id="minSpend" min="0" placeholder="e.g., 50" />
+            </div>
+
+            <div class="filter-group">
+              <label for="maxSpend">Max Monthly Spend (<span id="maxSpendCurrency">USD</span>)</label>
+              <input type="number" id="maxSpend" min="0" placeholder="e.g., 500" />
+            </div>
+          </div>
+
+          <div class="button-group">
+            <button id="applyFiltersBtn">Apply Filters</button>
+            <button id="clearFiltersBtn">Clear Filters</button>
+          </div>
+
+          <div id="activeFiltersTags" class="active-filters"></div>
+        </div>
+
+        <div class="controls-top">
+          <label><input id="autoRefresh" type="checkbox" checked /> Auto-refresh (30s)</label>
+          <button id="refreshBtn">Refresh now</button>
+          <button id="exportBtn">Export CSV</button>
+        </div>
+      </section>
+
+      <div class="main-content">
+        <div class="card" id="chartContainer" style="padding: 0; overflow: hidden;">
+          <div style="padding: 16px;">
+            <h3 style="margin: 0 0 12px 0; color: #065f46;">Response Breakdown</h3>
+          </div>
+          <canvas id="categoryChart" height="50"></canvas>
+        </div>
+
+        <div class="card" id="recent">
+          <h3 style="margin-top: 0; color: #065f46;">Recent Submissions</h3>
+          <table>
+            <thead><tr><th>When</th><th>Name</th><th>Fuel</th></tr></thead>
+            <tbody id="subsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/dashboard.js"></script>
+  </body>
+</html>

@@ -3,3 +3,4 @@ data/*.db
 /.env
 ./ReadStrat.md
 archi/
+data/
